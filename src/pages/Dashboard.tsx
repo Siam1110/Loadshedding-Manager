@@ -1,20 +1,27 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { SummaryCard } from '../components/SummaryCard';
-import { Zap, ShieldCheck, Activity, Clock, CheckCircle2, AlertOctagon, Edit3, Check, X } from 'lucide-react';
+import { Zap, ShieldCheck, Activity, Clock, CheckCircle2, AlertOctagon, Edit3, Check, X, Power } from 'lucide-react';
 import { toBengaliNumeral } from '../utils/bnUtils';
 
 export const Dashboard: React.FC = () => {
-  const { feeders, history, settings, updateFeederLoad } = useApp();
+  const { feeders, history, settings, updateFeederLoad, restoreFeeder } = useApp();
   const useBn = settings.bengaliNumberFormatting;
 
-  // Inline Edit-এর জন্য Local State
+  // Inline Edit State
   const [editingFeederId, setEditingFeederId] = useState<string | null>(null);
   const [tempLoadValue, setTempLoadValue] = useState<string>('');
 
-  const totalDemand = history.length > 0 ? history[0].demand : 0;
+  // ডায়নামিক কারেন্ট ডিমান্ড: সক্রিয় ফিডারগুলোর লোডের মোট যোগফল
+  const calculatedDemand = Number(
+    feeders
+      .filter(f => f.isActive)
+      .reduce((sum, f) => sum + f.currentLoad, 0)
+      .toFixed(settings.decimalPrecision)
+  );
+
   const totalAllocated = history.length > 0 ? history[0].allocatedLoad : 0;
-  const requiredShedding = history.length > 0 ? history[0].requiredShedding : 0;
+  const requiredShedding = Math.max(0, Number((calculatedDemand - totalAllocated).toFixed(settings.decimalPrecision)));
 
   const activeFeeders = feeders.filter(f => f.isActive);
   const protectedFeeders = feeders.filter(f => f.isProtected);
@@ -22,7 +29,7 @@ export const Dashboard: React.FC = () => {
 
   const totalCapacityMW = Number(feeders.reduce((acc, f) => acc + f.currentLoad, 0).toFixed(settings.decimalPrecision));
 
-  // লোড এডিট শুরু করা
+  // লোড এডিট শুরু
   const handleStartEdit = (id: string, currentLoad: number) => {
     setEditingFeederId(id);
     setTempLoadValue(currentLoad.toString());
@@ -37,7 +44,7 @@ export const Dashboard: React.FC = () => {
     setEditingFeederId(null);
   };
 
-  // এডিট বাতিল করা
+  // এডিট বাতিল
   const handleCancelEdit = () => {
     setEditingFeederId(null);
   };
@@ -58,11 +65,11 @@ export const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryCard
           title="Current Demand"
-          value={useBn ? toBengaliNumeral(totalDemand) : totalDemand.toFixed(2)}
+          value={useBn ? toBengaliNumeral(calculatedDemand) : calculatedDemand.toFixed(2)}
           unit="MW"
           icon={Zap}
           colorClass="bg-amber-500"
-          subtitle="বর্তমান চাহিদা"
+          subtitle="বর্তমান মোট চাহিদা (Live Calculated)"
         />
         <SummaryCard
           title="Allocated Load"
@@ -122,12 +129,24 @@ export const Dashboard: React.FC = () => {
                       <span className="font-bold text-slate-900 dark:text-white">{feeder.name}</span>
                       <span className="text-xs text-slate-500 font-mono ml-1.5">({feeder.code})</span>
                     </div>
-                    <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-semibold ${badgeBg}`}>
-                      {badgeText}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-semibold ${badgeBg}`}>
+                        {badgeText}
+                      </span>
+                      {feeder.isCurrentlyShed && (
+                        <button
+                          onClick={() => restoreFeeder(feeder.id)}
+                          className="flex items-center space-x-1 px-2 py-0.5 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow transition"
+                          title="শেডিং বন্ধ করে লাইন চালুর জন্য ক্লিক করুন"
+                        >
+                          <Power className="w-3 h-3" />
+                          <span>চালু করুন</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Dynamic Load Update Section */}
+                  {/* Dynamic Load Input Section */}
                   <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">বর্তমান লোড:</span>
                     
@@ -203,6 +222,36 @@ export const Dashboard: React.FC = () => {
           </div>
 
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">বর্তমানে বন্ধ আছে (Shed Feeders)</h3>
+            {currentlyShedFeeders.length === 0 ? (
+              <p className="text-xs text-slate-500 italic">কোনো ফিডার বন্ধ নেই</p>
+            ) : (
+              <div className="space-y-2">
+                {currentlyShedFeeders.map((f) => (
+                  <div key={f.id} className="flex justify-between items-center p-3 bg-rose-50 dark:bg-rose-950/40 rounded-xl">
+                    <div>
+                      <span className="text-sm font-semibold text-rose-900 dark:text-rose-200 block">{f.name}</span>
+                      <span className="text-xs font-mono text-rose-600 dark:text-rose-400">
+                        {useBn ? toBengaliNumeral(f.currentLoad) : f.currentLoad.toFixed(2)} MW
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => restoreFeeder(f.id)}
+                      className="px-2.5 py-1 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition"
+                    >
+                      চালু করুন
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">বর্তমানে বন্ধ আছে</h3>
             {currentlyShedFeeders.length === 0 ? (
               <p className="text-xs text-slate-500 italic">কোনো ফিডার বন্ধ নেই</p>
