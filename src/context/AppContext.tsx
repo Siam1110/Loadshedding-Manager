@@ -13,6 +13,7 @@ interface AppContextType {
   addFeeder: (feeder: Omit<Feeder, 'id' | 'isCurrentlyShed'>) => void;
   updateFeeder: (id: string, feeder: Partial<Feeder>) => void;
   updateFeederLoad: (id: string, newLoad: number) => void;
+  restoreFeeder: (id: string) => void; // <-- নতুন: শেডিং ম্যানুয়ালি অফ করার জন্য
   deleteFeeder: (id: string) => void;
   toggleFeederProtection: (id: string) => void;
   toggleFeederStatus: (id: string) => void;
@@ -60,6 +61,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateFeederLoad = (id: string, newLoad: number) => {
     setFeeders(prev => prev.map(f => f.id === id ? { ...f, currentLoad: newLoad } : f));
+  };
+
+  const restoreFeeder = (id: string) => {
+    setFeeders(prev => prev.map(f => f.id === id ? { ...f, isCurrentlyShed: false } : f));
   };
 
   const deleteFeeder = (id: string) => {
@@ -111,6 +116,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addFeeder,
       updateFeeder,
       updateFeederLoad,
+      restoreFeeder,
       deleteFeeder,
       toggleFeederProtection,
       toggleFeederStatus,
