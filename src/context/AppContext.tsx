@@ -12,6 +12,7 @@ interface AppContextType {
   settings: Settings;
   addFeeder: (feeder: Omit<Feeder, 'id' | 'isCurrentlyShed'>) => void;
   updateFeeder: (id: string, feeder: Partial<Feeder>) => void;
+  updateFeederLoad: (id: string, newLoad: number) => void;
   deleteFeeder: (id: string) => void;
   toggleFeederProtection: (id: string) => void;
   toggleFeederStatus: (id: string) => void;
@@ -55,6 +56,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateFeeder = (id: string, updated: Partial<Feeder>) => {
     setFeeders(prev => prev.map(f => f.id === id ? { ...f, ...updated } : f));
+  };
+
+  const updateFeederLoad = (id: string, newLoad: number) => {
+    setFeeders(prev => prev.map(f => f.id === id ? { ...f, currentLoad: newLoad } : f));
   };
 
   const deleteFeeder = (id: string) => {
@@ -105,6 +110,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       settings,
       addFeeder,
       updateFeeder,
+      updateFeederLoad,
       deleteFeeder,
       toggleFeederProtection,
       toggleFeederStatus,
@@ -122,4 +128,3 @@ export const useApp = () => {
   if (!context) throw new Error('useApp must be used within AppProvider');
   return context;
 };
-    
