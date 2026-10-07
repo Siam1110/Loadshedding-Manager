@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Zap, ListFilter, History, Settings, Moon, Sun } from 'lucide-react';
+import { LayoutDashboard, ListFilter, History, Settings, Moon, Sun, Zap } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 interface NavbarProps {
@@ -11,11 +11,10 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   const { settings, updateSettings } = useApp();
 
   const navItems = [
-    { id: 'dashboard', label: 'ড্যাশবোর্ড (Dashboard)', icon: LayoutDashboard },
-    { id: 'loadshedding', label: 'লোডশেডিং (Load Shedding)', icon: Zap },
-    { id: 'feeders', label: 'ফিডারসমূহ (Feeders)', icon: ListFilter },
-    { id: 'history', label: 'হিস্ট্রি (History)', icon: History },
-    { id: 'settings', label: 'সেটিংস (Settings)', icon: Settings },
+    { id: 'dashboard', label: 'ড্যাশবোর্ড', icon: LayoutDashboard },
+    { id: 'feeders', label: 'ফিডারসমূহ', icon: ListFilter },
+    { id: 'history', label: 'হিস্ট্রি', icon: History },
+    { id: 'settings', label: 'সেটিংস', icon: Settings },
   ];
 
   return (
@@ -42,14 +41,14 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors ${
                     isActive
                       ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400'
                       : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  <span>{item.label.split(' ')[0]}</span>
+                  <span>{item.label}</span>
                 </button>
               );
             })}
@@ -65,7 +64,6 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
         </div>
       </div>
 
-      {/* Mobile Nav */}
       <div className="md:hidden border-t border-slate-200 dark:border-slate-800 flex justify-around p-2 bg-slate-50 dark:bg-slate-900">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -81,7 +79,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
               }`}
             >
               <Icon className="w-5 h-5 mb-1" />
-              <span>{item.label.split(' ')[0]}</span>
+              <span>{item.label}</span>
             </button>
           );
         })}
@@ -89,4 +87,3 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
     </header>
   );
 };
-      
