@@ -12,7 +12,7 @@ export const Dashboard: React.FC = () => {
   const [editingFeederId, setEditingFeederId] = useState<string | null>(null);
   const [tempLoadValue, setTempLoadValue] = useState<string>('');
 
-  // Dynamic demand calculation
+  // Dynamic demand calculation: shob active feeder-er load-er jogfol
   const calculatedDemand = Number(
     feeders
       .filter(f => f.isActive)
@@ -205,6 +205,52 @@ export const Dashboard: React.FC = () => {
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3 flex items-center space-x-2">
               <ShieldCheck className="w-5 h-5 text-blue-500" />
+              <span>সুরক্ষিত ফিডার (Protected)</span>
+            </h3>
+            <p className="text-xs text-slate-500 mb-4">এই ফিডারগুলোতে কোনো অবস্থাতেই শেডিং দেওয়া হবে না</p>
+            <div className="space-y-2">
+              {protectedFeeders.map((f) => (
+                <div key={f.id} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                  <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">{f.name}</span>
+                  <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">
+                    {useBn ? toBengaliNumeral(f.currentLoad) : f.currentLoad.toFixed(2)} MW
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">বর্তমানে বন্ধ আছে (Shed Feeders)</h3>
+            {currentlyShedFeeders.length === 0 ? (
+              <p className="text-xs text-slate-500 italic">কোনো ফিডার বন্ধ নেই</p>
+            ) : (
+              <div className="space-y-2">
+                {currentlyShedFeeders.map((f) => (
+                  <div key={f.id} className="flex justify-between items-center p-3 bg-rose-50 dark:bg-rose-950/40 rounded-xl">
+                    <div>
+                      <span className="text-sm font-semibold text-rose-900 dark:text-rose-200 block">{f.name}</span>
+                      <span className="text-xs font-mono text-rose-600 dark:text-rose-400">
+                        {useBn ? toBengaliNumeral(f.currentLoad) : f.currentLoad.toFixed(2)} MW
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => restoreFeeder(f.id)}
+                      className="px-2.5 py-1 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition"
+                    >
+                      চালু করুন
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+     <ShieldCheck className="w-5 h-5 text-blue-500" />
               <span>সুরক্ষিত ফিডার (Protected)</span>
             </h3>
             <p className="text-xs text-slate-500 mb-4">এই ফিডারগুলোতে কোনো অবস্থাতেই শেডিং দেওয়া হবে না</p>
